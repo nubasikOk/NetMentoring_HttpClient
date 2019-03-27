@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetMentoring_HttpClient
+namespace NetMentoring_HttpClient.Interfaces
 {
-    public class Class1
-    {
+    public interface ILogger
+    { 
+        void Log(string message);
     }
 }

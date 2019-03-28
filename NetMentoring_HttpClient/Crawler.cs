@@ -11,7 +11,6 @@ namespace NetMentoring_HttpClient
 {
     public class Crawler : ICrawler
     {
-        private readonly string baseUrl;
         private const string htmlDocumentMediaType = "text/html";
         private readonly ISet<Uri> visitedUrls = new HashSet<Uri>();
         private readonly ILogger logger;
@@ -50,13 +49,14 @@ namespace NetMentoring_HttpClient
                 return;
             }
             visitedUrls.Add(uri);
+            
             HttpResponseMessage head = httpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, uri)).Result;
 
             if (!head.IsSuccessStatusCode)
             {
                 return;
             }
-
+            
             if (head.Content.Headers.ContentType?.MediaType == htmlDocumentMediaType)
             {
                 ProcessHtmlDocument(httpClient, uri, level);
@@ -86,12 +86,14 @@ namespace NetMentoring_HttpClient
             {
                 return;
             }
-            var response = httpClient.GetAsync(uri).Result;
+
+            var response =  httpClient.GetAsync(uri).Result;
             var document = new HtmlDocument();
-            var documentStream = response.Content.ReadAsStreamAsync().Result;
-            document.Load(documentStream, Encoding.UTF8);
+            var memoryStream = response.Content.ReadAsStreamAsync().Result;
+            document.Load(memoryStream, Encoding.UTF8);
             logger.Log($"Html loaded: {uri}");
-            contentSaver.SaveHtmlDocument(uri, GetDocumentFileName(document), documentStream);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+            contentSaver.SaveHtmlDocument(uri, GetDocumentFileName(document), memoryStream);
 
             var attributesWithLinks = document.DocumentNode.Descendants().SelectMany(d => d.Attributes.Where(IsAttributeWithLink));
             foreach (var attributesWithLink in attributesWithLinks)
@@ -99,6 +101,7 @@ namespace NetMentoring_HttpClient
                 LoadPage(httpClient, new Uri(httpClient.BaseAddress, attributesWithLink.Value), level + 1);
             }
         }
+
 
         private bool IsValidSchema(string schema)
         {

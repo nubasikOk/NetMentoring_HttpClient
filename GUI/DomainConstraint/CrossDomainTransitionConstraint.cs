@@ -32,18 +32,13 @@ namespace GUI.DomainConstraint
             {
                 case CrossDomainTransition.All:
                     return true;
+
                 case CrossDomainTransition.CurrentDomainOnly:
-                    if (parentUri.DnsSafeHost == uri.DnsSafeHost)
-                    {
-                        return true;
-                    }
-                    break;
+                    return parentUri.DnsSafeHost == uri.DnsSafeHost;
+                    
                 case CrossDomainTransition.DescendantUrlsOnly:
-                    if (parentUri.IsBaseOf(uri))
-                    {
-                        return true;
-                    }
-                    break;
+                    return parentUri.IsBaseOf(uri);
+                   
             }
 
             return false;

@@ -26,10 +26,6 @@ namespace GUI
 
                 SaveToFile(documentStream, fileFullPath);
             }
-            catch (Exception err)
-            {
-                throw new Exception(err.Message);
-            }
             finally
             {
                 documentStream.Close();
@@ -49,10 +45,6 @@ namespace GUI
                 }
                 SaveToFile(fileStream, fileFullPath);
                 
-            }
-            catch(Exception err)
-            {
-                throw new Exception(err.Message);
             }
             finally
             {

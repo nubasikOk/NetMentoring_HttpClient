@@ -56,7 +56,12 @@ namespace NetMentoring_HttpClient
             {
                 return;
             }
-            
+
+            if (!IsAcceptableUri(uri, domainConstraint))
+            {
+                return;
+            }
+
             if (head.Content.Headers.ContentType?.MediaType == htmlDocumentMediaType)
             {
                 ProcessHtmlDocument(httpClient, uri, level);
@@ -70,10 +75,7 @@ namespace NetMentoring_HttpClient
         private void ProcessFile(HttpClient httpClient, Uri uri)
         {
             logger.Log($"File founded: {uri}");
-            if (!IsAcceptableUri(uri, domainConstraint))
-            {
-                return;
-            }
+            
             var response = httpClient.GetAsync(uri).Result;
             logger.Log($"File loaded: {uri}");
             contentSaver.SaveFile(uri, response.Content.ReadAsStreamAsync().Result);
@@ -82,10 +84,7 @@ namespace NetMentoring_HttpClient
         private void ProcessHtmlDocument(HttpClient httpClient, Uri uri, int level)
         {
             logger.Log($"Url founded: {uri}");
-            if (!IsAcceptableUri(uri, domainConstraint))
-            {
-                return;
-            }
+            
 
             var response =  httpClient.GetAsync(uri).Result;
             var document = new HtmlDocument();

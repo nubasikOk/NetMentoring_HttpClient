@@ -16,19 +16,20 @@ namespace NetMentoring_HttpClient
         private readonly ISet<Uri> visitedUrls = new HashSet<Uri>();
         private readonly ILogger logger;
         private readonly IContentSaver contentSaver;
+        private readonly IDomainConstraint domainConstraint;
 
         public int MaxDeepLevel { get; set; }
 
 
-        public Crawler(string baseUrl, IContentSaver contentSaver,int maxDeepLevel, ILogger logger)
+        public Crawler(IContentSaver contentSaver,int maxDeepLevel, IDomainConstraint domainConstraint,  ILogger logger)
         {
             if (maxDeepLevel < 0)
             {
                 throw new ArgumentException($"{nameof(maxDeepLevel)} can't be less than 0");
             }
-            this.baseUrl = baseUrl;
             this.contentSaver = contentSaver;
             this.logger = logger;
+            this.domainConstraint = domainConstraint;
             MaxDeepLevel = maxDeepLevel;
 
         }
@@ -69,7 +70,10 @@ namespace NetMentoring_HttpClient
         private void ProcessFile(HttpClient httpClient, Uri uri)
         {
             logger.Log($"File founded: {uri}");
-           
+            if (!IsAcceptableUri(uri, domainConstraint))
+            {
+                return;
+            }
             var response = httpClient.GetAsync(uri).Result;
             logger.Log($"File loaded: {uri}");
             contentSaver.SaveFile(uri, response.Content.ReadAsStreamAsync().Result);
@@ -78,12 +82,16 @@ namespace NetMentoring_HttpClient
         private void ProcessHtmlDocument(HttpClient httpClient, Uri uri, int level)
         {
             logger.Log($"Url founded: {uri}");
-            
+            if (!IsAcceptableUri(uri, domainConstraint))
+            {
+                return;
+            }
             var response = httpClient.GetAsync(uri).Result;
             var document = new HtmlDocument();
-            document.Load(response.Content.ReadAsStreamAsync().Result, Encoding.UTF8);
+            var documentStream = response.Content.ReadAsStreamAsync().Result;
+            document.Load(documentStream, Encoding.UTF8);
             logger.Log($"Html loaded: {uri}");
-            contentSaver.SaveHtmlDocument(uri, GetDocumentFileName(document), GetDocumentStream(document));
+            contentSaver.SaveHtmlDocument(uri, GetDocumentFileName(document), documentStream);
 
             var attributesWithLinks = document.DocumentNode.Descendants().SelectMany(d => d.Attributes.Where(IsAttributeWithLink));
             foreach (var attributesWithLink in attributesWithLinks)
@@ -102,17 +110,15 @@ namespace NetMentoring_HttpClient
             return document.DocumentNode.Descendants("title").FirstOrDefault()?.InnerText + ".html";
         }
 
-        private Stream GetDocumentStream(HtmlDocument document)
-        {
-            MemoryStream memoryStream = new MemoryStream();
-            document.Save(memoryStream);
-            memoryStream.Seek(0, SeekOrigin.Begin);
-            return memoryStream;
-        }
 
         private bool IsAttributeWithLink(HtmlAttribute attribute)
         {
             return attribute.Name == "src" || attribute.Name == "href";
+        }
+
+        private bool IsAcceptableUri(Uri uri, IDomainConstraint constraint)
+        {
+            return constraint.IsAcceptable(uri);
         }
     }
 }

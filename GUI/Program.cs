@@ -1,4 +1,5 @@
-﻿using NetMentoring_HttpClient;
+﻿using GUI.DomainConstraint;
+using NetMentoring_HttpClient;
 using NetMentoring_HttpClient.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -16,10 +17,12 @@ namespace GUI
             DirectoryInfo rootDirectory = new DirectoryInfo("D:\\site");
             IContentSaver contentSaver = new ContentSaver(rootDirectory);
             ILogger logger = new ConsoleLogger(true);
-            ICrawler crawler = new Crawler("http://epam.com", contentSaver, 3, logger);
+            Uri uri = new Uri("http://epam.com");
+            IDomainConstraint constraint = new CrossDomainTransitionConstraint(CrossDomainTransition.CurrentDomainOnly, uri);
+            ICrawler crawler = new Crawler(contentSaver, 3, constraint, logger);
             try
             {
-                crawler.LoadFromUrl("http://epam.com");
+                crawler.LoadFromUrl(uri.AbsoluteUri);
             }
             catch (Exception ex)
             {

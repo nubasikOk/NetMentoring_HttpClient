@@ -1,7 +1,5 @@
-﻿
-using NetMentoring_HttpClient.Interfaces;
+﻿using NetMentoring_HttpClient.Interfaces;
 using System;
-
 using System.IO;
 using System.Linq;
 
@@ -10,43 +8,64 @@ namespace GUI
 {
     public class ContentSaver : IContentSaver
     {
-        private readonly DirectoryInfo _rootDirectory;
+        private readonly DirectoryInfo rootDirectory;
 
         public ContentSaver(DirectoryInfo rootDirectory)
         {
-            _rootDirectory = rootDirectory;
+            this.rootDirectory = rootDirectory;
         }
 
         public void SaveHtmlDocument(Uri uri, string name, Stream documentStream)
         {
-            string directoryPath = CombineLocations(_rootDirectory, uri);
-            Directory.CreateDirectory(directoryPath);
-            name = RemoveInvalidSymbols(name);
-            string fileFullPath = Path.Combine(directoryPath, name);
+            try
+            {
+                string directoryPath = CombineLocations(rootDirectory, uri);
+                Directory.CreateDirectory(directoryPath);
+                name = RemoveInvalidSymbols(name);
+                string fileFullPath = Path.Combine(directoryPath, name);
 
-            SaveToFile(documentStream, fileFullPath);
-            documentStream.Close();
+                SaveToFile(documentStream, fileFullPath);
+            }
+            catch (Exception err)
+            {
+                throw new Exception(err.Message);
+            }
+            finally
+            {
+                documentStream.Close();
+            }
         }
 
         public void SaveFile(Uri uri, Stream fileStream)
         {
-            string fileFullPath = CombineLocations(_rootDirectory, uri);
-            var directoryPath = Path.GetDirectoryName(fileFullPath);
-            Directory.CreateDirectory(directoryPath);
-            if (Directory.Exists(fileFullPath)) 
+            try
             {
-                fileFullPath = Path.Combine(fileFullPath, Guid.NewGuid().ToString());
+                string fileFullPath = CombineLocations(rootDirectory, uri);
+                var directoryPath = Path.GetDirectoryName(fileFullPath);
+                Directory.CreateDirectory(directoryPath);
+                if (Directory.Exists(fileFullPath))
+                {
+                    fileFullPath = Path.Combine(fileFullPath, Guid.NewGuid().ToString());
+                }
+                SaveToFile(fileStream, fileFullPath);
+                
             }
-
-            SaveToFile(fileStream, fileFullPath);
-            fileStream.Close();
+            catch(Exception err)
+            {
+                throw new Exception(err.Message);
+            }
+            finally
+            {
+                fileStream.Close();
+            }
         }
 
         private void SaveToFile(Stream stream, string fileFullPath)
         {
-            var createdFileStream = File.Create(fileFullPath);
-            stream.CopyTo(createdFileStream);
-            createdFileStream.Close();
+            using (var createdFileStream = File.Create(fileFullPath))
+            {
+                stream.CopyTo(createdFileStream);
+            }
         }
 
         private string CombineLocations(DirectoryInfo directory, Uri uri)

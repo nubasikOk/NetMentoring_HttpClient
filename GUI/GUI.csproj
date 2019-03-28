@@ -62,6 +62,8 @@
   <ItemGroup>
     <Compile Include="ConsoleLogger.cs" />
     <Compile Include="ContentSaver.cs" />
+    <Compile Include="DomainConstraint\CrossDomainTransition.cs" />
+    <Compile Include="DomainConstraint\CrossDomainTransitionConstraint.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

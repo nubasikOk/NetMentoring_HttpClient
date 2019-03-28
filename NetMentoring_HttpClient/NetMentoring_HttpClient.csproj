@@ -61,6 +61,7 @@
     <Compile Include="Crawler.cs" />
     <Compile Include="Interfaces\IContentSaver.cs" />
     <Compile Include="Interfaces\ICrawler.cs" />
+    <Compile Include="Interfaces\IDomainConstraint.cs" />
     <Compile Include="Interfaces\ILogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
